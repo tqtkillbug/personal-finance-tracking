@@ -1,6 +1,7 @@
 package com.tqt.personal_finance_tracking.config;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,10 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "app")
 @Getter
+@Setter
 public class AppConfig {
-    private String notionApiKey;
-    private String botTeleToken;
-    private String botTeleUsername;
-    private String xaiKey;
+    private String apikey;
+    private String token;
+    private String username;
+    private String xaikey;
 
 }

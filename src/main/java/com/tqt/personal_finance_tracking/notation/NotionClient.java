@@ -31,7 +31,7 @@ public class NotionClient {
 
     private HttpHeaders buildHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + appConfig.getNotionApiKey());
+        headers.add("Authorization", "Bearer " + appConfig.getApikey());
         headers.add("Notion-Version", API_VERSION);
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;

@@ -50,7 +50,7 @@ public class MessageService {
                 sendMessage.setText(expense.toString());
 
             } else {
-                sendMessage.setText("<b>Lỗi! hãy nhập lại chi tiêu</b>");
+                sendMessage.setText("<b>Lỗi! hãy nhập lại chi tiêu!</b>");
             }
             NotionPageResponse rp = pushToNotion(expense);
             InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
@@ -105,15 +105,22 @@ public class MessageService {
         SimpleDateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Calendar calendar = Calendar.getInstance();
 
-        return switch (input) {
-            case "Today" -> isoDateFormat.format(calendar.getTime());
-            case "Yesterday" -> {
+        String result;
+        switch (input) {
+            case "Today":
+                result = isoDateFormat.format(calendar.getTime());
+                break;
+            case "Yesterday":
                 calendar.add(Calendar.DATE, -1);
-                yield isoDateFormat.format(calendar.getTime());
-            }
-            case "None" -> isoDateFormat.format(calendar.getTime());
-            default -> isoDateFormat.format(calendar.getTime());
-        };
+                result = isoDateFormat.format(calendar.getTime());
+                break;
+            case "None":
+            default:
+                result = isoDateFormat.format(calendar.getTime());
+                break;
+        }
+        return result;
+
     }
 
 

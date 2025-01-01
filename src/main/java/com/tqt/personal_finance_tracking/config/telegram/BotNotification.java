@@ -32,12 +32,12 @@ public class BotNotification extends TelegramLongPollingBot {
 
 
     public String getBotUsername() {
-        return appConfig.getBotTeleUsername();
+        return appConfig.getUsername();
     }
 
     @Override
     public String getBotToken() {
-        return appConfig.getBotTeleToken();
+        return appConfig.getToken();
     }
 
     @SneakyThrows

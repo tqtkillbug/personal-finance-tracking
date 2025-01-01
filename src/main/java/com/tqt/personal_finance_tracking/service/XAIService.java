@@ -47,7 +47,7 @@ public class XAIService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
-            headers.set("Authorization", "Bearer " + appConfig.getXaiKey());
+            headers.set("Authorization", "Bearer " + appConfig.getXaikey());
 
             HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
 
