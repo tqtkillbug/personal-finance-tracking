@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.tqt.personal_finance_tracking.contants.Contants;
 import com.tqt.personal_finance_tracking.dto.Expense;
 import com.tqt.personal_finance_tracking.model.NotionPageResponse;
+import com.tqt.personal_finance_tracking.model.gemini.Response;
 import com.tqt.personal_finance_tracking.notation.NotionService;
 import com.tqt.personal_finance_tracking.model.*;
 import com.tqt.personal_finance_tracking.model.xai.ChatCompletion;
@@ -34,6 +35,9 @@ public class MessageService {
     @Autowired
     private NotionService notionService;
 
+    @Autowired
+    private GeminiAPIClient geminiApiService;
+
 
     public void handleMessage(Update update) {
         Message message = update.getMessage();
@@ -41,24 +45,29 @@ public class MessageService {
         String chatId = String.valueOf(message.getChatId());
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
-        sendMessage.setParseMode(ParseMode.HTML);
+        sendMessage.setParseMode(ParseMode.MARKDOWNV2);
         if (!text.isEmpty()){
             String promptBuilt = String.format(Contants.PROMPT_EXTRACT_TEXT, text);
-            ChatCompletion response = xaiService.callXAI(promptBuilt);
-            Expense expense = parseJson(response.getChoices().get(0).getMessage().getContent());
-            if (expense != null){
-                sendMessage.setText(expense.toString());
-
-            } else {
+            try {
+                Response responseGemi = geminiApiService.callGenerativeAPI(promptBuilt);
+                Expense expense = parseJson(responseGemi.getCandidates().get(0).getContent().getParts().get(0).getText());
+                if (expense != null){
+                    sendMessage.setText(BotUtils.buildExpenseMessage(expense));
+                    NotionPageResponse rp = pushToNotion(expense);
+                    InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                    inlineKeyboardMarkup.setKeyboard(BotUtils.buildCallBackButton(rp.getId()));
+                    sendMessage.setReplyMarkup(inlineKeyboardMarkup);
+                } else {
+                    sendMessage.setText("<b>Lỗi! hãy nhập lại chi tiêu!</b>");
+                }
+            }catch (Exception e){
                 sendMessage.setText("<b>Lỗi! hãy nhập lại chi tiêu!</b>");
             }
-            NotionPageResponse rp = pushToNotion(expense);
-            InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-            inlineKeyboardMarkup.setKeyboard(BotUtils.buildCallBackButton(rp.getId()));
-            sendMessage.setReplyMarkup(inlineKeyboardMarkup);
             botTeleService.sendToClient(sendMessage);
         }
     }
+
+
 
 
 
@@ -122,6 +131,7 @@ public class MessageService {
         return result;
 
     }
+
 
 
 }

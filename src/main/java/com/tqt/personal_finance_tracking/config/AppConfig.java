@@ -15,5 +15,6 @@ public class AppConfig {
     private String token;
     private String username;
     private String xaikey;
+    private String geminiKey;
 
 }
