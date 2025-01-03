@@ -17,11 +17,11 @@ public class BotUtils {
         InlineKeyboardButton b1 = new InlineKeyboardButton();
         b1.setText("Delete");
         b1.setCallbackData("delete:" + pageId);
-        InlineKeyboardButton b2 = new InlineKeyboardButton();
-        b2.setText("Change");
-        b2.setCallbackData("change:" + pageId);
         row1.add(b1);
-        row1.add(b2);
+//        InlineKeyboardButton b2 = new InlineKeyboardButton();
+//        b2.setText("Change");
+//        b2.setCallbackData("change:" + pageId);
+//        row1.add(b2);
         keyboard.add(row1);
         return keyboard;
     }

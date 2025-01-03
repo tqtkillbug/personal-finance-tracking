@@ -7,12 +7,13 @@ import com.tqt.personal_finance_tracking.model.NotionPageResponse;
 import com.tqt.personal_finance_tracking.model.NotionProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -94,21 +95,21 @@ public class NotionClient {
         HttpHeaders headers = buildHeaders();
         return executeRequest(url, HttpMethod.POST, query, NotionQueryResponse.class, headers);
     }
-}
 
-@Configuration
-class RestTemplateConfig {
+    public NotionPageResponse deletePage(String pageId) {
+        String url = NOTION_API_URL + "pages/" + pageId;
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
+        HttpHeaders headers = buildHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("archived", true);
+        return restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<>(requestBody, headers), NotionPageResponse.class).getBody();
     }
 
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
+
 }
+
 
 class NotionParent {
     private String database_id;
@@ -148,8 +149,6 @@ class NotionPageRequest {
 }
 
 
-
-
 class NotionUserList {
 }
 
@@ -160,4 +159,5 @@ class NotionQuery {
 }
 
 class NotionQueryResponse {
+
 }

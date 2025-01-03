@@ -40,6 +40,10 @@ public class MessageService {
 
 
     public void handleMessage(Update update) {
+        if (update.hasCallbackQuery()){
+            handleCallBack(update);
+            return;
+        }
         Message message = update.getMessage();
         String text = message.getText();
         String chatId = String.valueOf(message.getChatId());
@@ -67,9 +71,25 @@ public class MessageService {
         }
     }
 
-
-
-
+    private void handleCallBack(Update update) {
+        if (update.getCallbackQuery().getData() != null){
+            String data = update.getCallbackQuery().getData();
+            SendMessage replyMessage = new SendMessage();
+            replyMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
+            if (data.contains("delete")){
+                String idPage = data.split(":")[1];
+                NotionPageResponse response = notionService.deletePage(idPage);
+                Integer replyChatId = update.getCallbackQuery().getMessage().getMessageId();
+                if (response != null){
+                    replyMessage.setText("Removed");
+                    replyMessage.setReplyToMessageId(replyChatId);
+                }
+            } else {
+                replyMessage.setText("Not action!");
+            }
+            botTeleService.sendToClient(replyMessage);
+        }
+    }
 
 
     public static Expense parseJson(String jsonString) {

@@ -52,6 +52,10 @@ public class NotionService {
         return new HashMap<>();
     }
 
+    public NotionPageResponse deletePage(String pageId) {
+       return notionClient.deletePage(pageId);
+    }
+
 
 
 
