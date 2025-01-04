@@ -2,6 +2,8 @@ package com.tqt.personal_finance_tracking.util;
 
 
 import com.tqt.personal_finance_tracking.dto.Expense;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.text.NumberFormat;
@@ -72,4 +74,33 @@ public class BotUtils {
         }
     }
 
+    public static SendMessage buildListButtonReport() {
+        SendMessage sendMessage = new SendMessage();
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton b1 = new InlineKeyboardButton();
+        b1.setText("Today");
+        b1.setCallbackData("today");
+        row1.add(b1);
+
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton b12 = new InlineKeyboardButton();
+        b12.setText("Yesterday");
+        b12.setCallbackData("yesterday");
+        row2.add(b12);
+        InlineKeyboardButton b13 = new InlineKeyboardButton();
+        b13.setText("This Week");
+        b13.setCallbackData("thisweek");
+        row2.add(b13);
+        InlineKeyboardButton b14 = new InlineKeyboardButton();
+        b14.setText("This Month");
+        b14.setCallbackData("thismonth");
+        row2.add(b14);
+        keyboard.add(row1);
+        keyboard.add(row2);
+        inlineKeyboardMarkup.setKeyboard(keyboard);
+        sendMessage.setReplyMarkup(inlineKeyboardMarkup);
+        return sendMessage;
+    }
 }

@@ -44,10 +44,6 @@ public class HomeController {
         return notionService.retrieveDatabase();
     }
 
-    @GetMapping("/notion/query-database")
-    public Map<String, Object> queryDatabase() {
-        return notionService.queryDatabase();
-    }
 
     @GetMapping("/notion/insert-page")
     public Map<String, Object> insertPage(Principal principal) {

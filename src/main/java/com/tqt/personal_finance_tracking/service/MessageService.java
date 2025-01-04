@@ -3,8 +3,12 @@ package com.tqt.personal_finance_tracking.service;
 import com.google.gson.Gson;
 import com.tqt.personal_finance_tracking.contants.Contants;
 import com.tqt.personal_finance_tracking.dto.Expense;
+import com.tqt.personal_finance_tracking.model.Amount;
+import com.tqt.personal_finance_tracking.model.Date;
+import com.tqt.personal_finance_tracking.model.Notes;
 import com.tqt.personal_finance_tracking.model.NotionPageResponse;
 import com.tqt.personal_finance_tracking.model.gemini.Response;
+import com.tqt.personal_finance_tracking.model.notion.*;
 import com.tqt.personal_finance_tracking.notation.NotionService;
 import com.tqt.personal_finance_tracking.model.*;
 import com.tqt.personal_finance_tracking.model.xai.ChatCompletion;
@@ -44,6 +48,10 @@ public class MessageService {
             handleCallBack(update);
             return;
         }
+        if (update.getMessage().getText().contains("/")){
+            handleCommand(update);
+            return;
+        }
         Message message = update.getMessage();
         String text = message.getText();
         String chatId = String.valueOf(message.getChatId());
@@ -55,20 +63,35 @@ public class MessageService {
             try {
                 Response responseGemi = geminiApiService.callGenerativeAPI(promptBuilt);
                 Expense expense = parseJson(responseGemi.getCandidates().get(0).getContent().getParts().get(0).getText());
-                if (expense != null){
+                if (expense != null && expense.getAmount() != null && !expense.getAmount().equals("0")){
                     sendMessage.setText(BotUtils.buildExpenseMessage(expense));
                     NotionPageResponse rp = pushToNotion(expense);
                     InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
                     inlineKeyboardMarkup.setKeyboard(BotUtils.buildCallBackButton(rp.getId()));
                     sendMessage.setReplyMarkup(inlineKeyboardMarkup);
                 } else {
-                    sendMessage.setText("<b>Lỗi! hãy nhập lại chi tiêu!</b>");
+                    sendMessage.setText("*Không xác định chi tiêu, hãy nhập lại*");
                 }
             }catch (Exception e){
-                sendMessage.setText("<b>Lỗi! hãy nhập lại chi tiêu!</b>");
+                sendMessage.setText("*Không xác định chi tiêu, hãy nhập lại*");
             }
             botTeleService.sendToClient(sendMessage);
         }
+    }
+
+    private void handleCommand(Update update) {
+        String command = update.getMessage().getText();
+        SendMessage sendMessage;
+        switch (command){
+            case "/report" :
+                sendMessage = BotUtils.buildListButtonReport();
+                break;
+            default:
+                sendMessage = SendMessage.builder().text("Invalid").build();
+        }
+        sendMessage.setText("List Button Report");
+        sendMessage.setChatId(String.valueOf(update.getMessage().getChatId()));
+        botTeleService.sendToClient(sendMessage);
     }
 
     private void handleCallBack(Update update) {
@@ -84,6 +107,8 @@ public class MessageService {
                     replyMessage.setText("Removed");
                     replyMessage.setReplyToMessageId(replyChatId);
                 }
+            } else if (data.contains("today")){
+                handleReport(update);
             } else {
                 replyMessage.setText("Not action!");
             }
@@ -127,7 +152,7 @@ public class MessageService {
         properties.setType(new Type(new NameWrapper(expense.getType())));
 
         String databaseId = expense.getFundType().equals("Income") ? Contants.DATABASE_INCOME_ID : Contants.DATABASE_EXPESENS_ID;
-       return notionService.insertPage(properties, databaseId);
+        return notionService.insertPage(properties, databaseId);
     }
 
     public static String getFormattedDate(String input) {
@@ -149,6 +174,21 @@ public class MessageService {
                 break;
         }
         return result;
+
+    }
+
+
+    private void handleReport(Update update) {
+        String data = update.getCallbackQuery().getData();
+        if (data.equals("today")){
+
+            DateFilter dateFilter = new DateFilter("2025-01-01", "2025-12-30");
+            Filter filter = new Filter("Date", dateFilter);
+            NotionQuery notionQuery = new NotionQuery(filter);
+            NotionQueryResponse response = notionService.queryDatabase(notionQuery);
+            String a = response.getObject();
+        }
+
 
     }
 

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tqt.personal_finance_tracking.config.AppConfig;
 import com.tqt.personal_finance_tracking.model.NotionPageResponse;
 import com.tqt.personal_finance_tracking.model.NotionProperties;
+import com.tqt.personal_finance_tracking.model.notion.NotionQuery;
+import com.tqt.personal_finance_tracking.model.notion.NotionQueryResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -46,15 +48,22 @@ public class NotionClient {
             log.info("Request Body: {}", requestBody);
 
             HttpEntity<Object> entity = new HttpEntity<>(requestBody, headers);
-            ResponseEntity<T> response = restTemplate.exchange(url, method, entity, responseType);
-            return response.getBody();
+            ResponseEntity<String> response = restTemplate.exchange(url, method, entity, String.class);
+
+            // Log the raw JSON response
+            log.info("Response Body: {}", response.getBody());
+
+            // Convert the response body to the desired response type
+            return objectMapper.readValue(response.getBody(), responseType);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize request body", e);
+            log.error("Failed to serialize request body or parse response body", e);
             throw new RuntimeException("Failed to process JSON", e);
         } catch (HttpClientErrorException e) {
+            log.error("API request failed with status code {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new RuntimeException("API request failed: " + e.getResponseBodyAsString(), e);
         }
     }
+
 
     public NotionPageResponse insertData(String databaseId, NotionProperties properties) {
         String url = NOTION_API_URL + "pages";
@@ -153,11 +162,4 @@ class NotionUserList {
 }
 
 class NotionDatabase {
-}
-
-class NotionQuery {
-}
-
-class NotionQueryResponse {
-
 }

@@ -1,9 +1,10 @@
 package com.tqt.personal_finance_tracking.notation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tqt.personal_finance_tracking.contants.Contants;
 import com.tqt.personal_finance_tracking.model.NotionPageResponse;
 import com.tqt.personal_finance_tracking.model.NotionProperties;
+import com.tqt.personal_finance_tracking.model.notion.NotionQuery;
+import com.tqt.personal_finance_tracking.model.notion.NotionQueryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,11 +46,11 @@ public class NotionService {
         return new HashMap<>();
     }
 
-    public Map<String, Object> queryDatabase() {
-        NotionQueryResponse usersData = notionClient.queryDatabase(Contants.DATABASE_INCOME_ID, new NotionQuery());
+    public NotionQueryResponse queryDatabase(NotionQuery query) {
+        NotionQueryResponse usersData = notionClient.queryDatabase(Contants.DATABASE_EXPESENS_ID, query);
 
 
-        return new HashMap<>();
+        return usersData;
     }
 
     public NotionPageResponse deletePage(String pageId) {
