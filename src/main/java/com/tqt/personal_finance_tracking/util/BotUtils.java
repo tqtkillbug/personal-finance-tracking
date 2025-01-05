@@ -2,6 +2,7 @@ package com.tqt.personal_finance_tracking.util;
 
 
 import com.tqt.personal_finance_tracking.dto.Expense;
+import com.tqt.personal_finance_tracking.model.notion.Properties;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -44,6 +45,46 @@ public class BotUtils {
         return messageBuilder.toString();
     }
 
+    public static SendMessage buildReportMessage(List<Properties> propertiesList) {
+        StringBuilder message = new StringBuilder();
+        message.append("*Report Summary*\n");
+
+        for (Properties properties : propertiesList) {
+            String source = escapeMarkdownV(properties.getSource().getTitle().get(0).getPlainText());
+            String amount = escapeMarkdownV(String.valueOf(properties.getAmount().getNumber()));
+            String type = escapeMarkdownV(properties.getType().getSelect().getName());
+            String tags = properties.getTags() != null && properties.getTags().getSelect() != null
+                    ? escapeMarkdownV(properties.getTags().getSelect().getName()) : "N/A";
+            String date = escapeMarkdownV(properties.getDate().getDate().getStart());
+            String notes = properties.getNotes() != null && !properties.getNotes().getRichText().isEmpty()
+                    ? escapeMarkdownV(properties.getNotes().getRichText().get(0).getPlainText()) : "N/A";
+
+            message.append("\n*Source:* ").append(source)
+                    .append("\n*Amount:* ").append(amount)
+                    .append("\n*Type:* ").append(type)
+                    .append("\n*Tags:* ").append(tags)
+                    .append("\n*Date:* ").append(date)
+                    .append("\n*Notes:* ").append(notes)
+                    .append("\n\\-\\-\\-");
+        }
+
+
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setText(message.toString());
+        sendMessage.enableMarkdownV2(true);
+
+        return sendMessage;
+    }
+
+    public static String escapeMarkdownV(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replaceAll("([_\\*\\[\\]\\(\\)~`>#+\\-=|{}\\.!])", "\\\\$1");
+    }
+
+
+
     private static String escapeMarkdown(String text) {
         return text.replace("_", "\\_")
                 .replace("*", "\\*")
@@ -64,6 +105,7 @@ public class BotUtils {
                 .replace(".", "\\.")
                 .replace("!", "\\!");
     }
+
     private static String formatCurrency(String amount) {
         try {
             double amountDouble = Double.parseDouble(amount.replace(",", ""));

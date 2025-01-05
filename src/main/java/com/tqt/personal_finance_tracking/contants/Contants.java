@@ -7,4 +7,6 @@ public class Contants {
 
     public static final String DATABASE_INCOME_ID = "15c0d9d80cda81f4bbf6ee9c948c875c";
     public static final String DATABASE_EXPESENS_ID = "15c0d9d80cda8109a136cf5f627eef51";
+
+    public static final String CHAT_ID_BOSS = "904114553";
 }

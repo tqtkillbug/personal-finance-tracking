@@ -11,7 +11,6 @@ import com.tqt.personal_finance_tracking.model.gemini.Response;
 import com.tqt.personal_finance_tracking.model.notion.*;
 import com.tqt.personal_finance_tracking.notation.NotionService;
 import com.tqt.personal_finance_tracking.model.*;
-import com.tqt.personal_finance_tracking.model.xai.ChatCompletion;
 import com.tqt.personal_finance_tracking.util.BotUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -180,15 +180,28 @@ public class MessageService {
 
     private void handleReport(Update update) {
         String data = update.getCallbackQuery().getData();
+        SendMessage sendMessage = new SendMessage();
         if (data.equals("today")){
 
-            DateFilter dateFilter = new DateFilter("2025-01-01", "2025-12-30");
+            DateFilter dateFilter = new DateFilter();
+            dateFilter.setEquals(getFormattedDate("Today"));
+            dateFilter.setEquals("2025-01-05");
             Filter filter = new Filter("Date", dateFilter);
             NotionQuery notionQuery = new NotionQuery(filter);
             NotionQueryResponse response = notionService.queryDatabase(notionQuery);
-            String a = response.getObject();
+            List<Properties> properties = new ArrayList<>();
+            if (response != null){
+                for (Result result : response.getResults()) {
+                   properties.add(result.getProperties());
+                }
+            }
+            sendMessage = BotUtils.buildReportMessage(properties);
         }
 
+        String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
+        sendMessage.setChatId(chatId);
+        sendMessage.setParseMode(ParseMode.MARKDOWNV2);
+        botTeleService.sendToClient(sendMessage);
 
     }
 
