@@ -185,7 +185,6 @@ public class MessageService {
 
             DateFilter dateFilter = new DateFilter();
             dateFilter.setEquals(getFormattedDate("Today"));
-            dateFilter.setEquals("2025-01-05");
             Filter filter = new Filter("Date", dateFilter);
             NotionQuery notionQuery = new NotionQuery(filter);
             NotionQueryResponse response = notionService.queryDatabase(notionQuery);
