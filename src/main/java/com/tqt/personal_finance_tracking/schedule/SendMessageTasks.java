@@ -14,8 +14,8 @@ public class SendMessageTasks {
     @Autowired
     private BotTeleService botTeleService;
 
-    @Scheduled(cron = "0 0 13 * * ?")
-    public void runAt13h() {
+    @Scheduled(cron = "0 05 13 * * ?")
+    public void runAt1305() {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(Contants.CHAT_ID_BOSS);
         sendMessage.setParseMode(ParseMode.MARKDOWNV2);
@@ -23,8 +23,17 @@ public class SendMessageTasks {
         botTeleService.sendToClient(sendMessage);
     }
 
-    @Scheduled(cron = "0 47 23 * * ?")
-    public void runAt2347() {
+    @Scheduled(cron = "0 30 19 * * ?")
+    public void runAt1930() {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(Contants.CHAT_ID_BOSS);
+        sendMessage.setParseMode(ParseMode.MARKDOWNV2);
+        sendMessage.setText("*Bạn đã chi tiêu gì mới không, hãy nhập thêm chi tiêu*");
+        botTeleService.sendToClient(sendMessage);
+    }
+
+    @Scheduled(cron = "0 15 22 * * ?")
+    public void runAt2215() {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(Contants.CHAT_ID_BOSS);
         sendMessage.setParseMode(ParseMode.MARKDOWNV2);
@@ -33,14 +42,4 @@ public class SendMessageTasks {
     }
 
 
-
-    @Scheduled(cron = "0 0 22 * * ?")
-    public void runAt22h() {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(Contants.CHAT_ID_BOSS);
-        sendMessage.setParseMode(ParseMode.MARKDOWNV2);
-        sendMessage.setText("*Bạn đã chi tiêu gì mới không, hãy nhập thêm chi tiêu*");
-        botTeleService.sendToClient(sendMessage);
-
-    }
 }
