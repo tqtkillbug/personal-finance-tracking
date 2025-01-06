@@ -23,15 +23,15 @@ public class SendMessageTasks {
         botTeleService.sendToClient(sendMessage);
     }
 
-    @Scheduled(cron = "0 * * * * ?")
-    public void testCron() {
-        System.out.println("Cron test chạy mỗi phút.");
+    @Scheduled(cron = "0 47 23 * * ?")
+    public void runAt2347() {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(Contants.CHAT_ID_BOSS);
         sendMessage.setParseMode(ParseMode.MARKDOWNV2);
         sendMessage.setText("*Bạn đã chi tiêu gì mới không, hãy nhập thêm chi tiêu*");
         botTeleService.sendToClient(sendMessage);
     }
+
 
 
     @Scheduled(cron = "0 0 22 * * ?")
