@@ -47,26 +47,28 @@ public class BotUtils {
 
     public static SendMessage buildReportMessage(List<Properties> propertiesList) {
         StringBuilder message = new StringBuilder();
-        message.append("*Report Summary*\n");
+        if (propertiesList == null || propertiesList.isEmpty()) return null;
+
+        String date = escapeMarkdownV(propertiesList.get(0).getDate().getDate().getStart());
+        message.append("*Report Summary ").append(date).append(" *\n");
+        double totalAmount = 0;
 
         for (Properties properties : propertiesList) {
             String source = escapeMarkdownV(properties.getSource().getTitle().get(0).getPlainText());
-            String amount = escapeMarkdownV(String.valueOf(properties.getAmount().getNumber()));
+            double dAmount = properties.getAmount().getNumber();
+            totalAmount = totalAmount + dAmount;
             String type = escapeMarkdownV(properties.getType().getSelect().getName());
-            String tags = properties.getTags() != null && properties.getTags().getSelect() != null
-                    ? escapeMarkdownV(properties.getTags().getSelect().getName()) : "N/A";
-            String date = escapeMarkdownV(properties.getDate().getDate().getStart());
             String notes = properties.getNotes() != null && !properties.getNotes().getRichText().isEmpty()
                     ? escapeMarkdownV(properties.getNotes().getRichText().get(0).getPlainText()) : "N/A";
 
             message.append("\n*Source:* ").append(source)
-                    .append("\n*Amount:* ").append(amount)
+                    .append("\n*Amount:* ").append(escapeMarkdownV(formatToVND(dAmount)))
                     .append("\n*Type:* ").append(type)
-                    .append("\n*Tags:* ").append(tags)
-                    .append("\n*Date:* ").append(date)
                     .append("\n*Notes:* ").append(notes)
                     .append("\n\\-\\-\\-");
         }
+        message.append("\n\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-");
+        message.append("*\nTotal : *").append(escapeMarkdownV(formatToVND((totalAmount))));
 
 
         SendMessage sendMessage = new SendMessage();
@@ -81,6 +83,15 @@ public class BotUtils {
             return "";
         }
         return text.replaceAll("([_\\*\\[\\]\\(\\)~`>#+\\-=|{}\\.!])", "\\\\$1");
+    }
+
+    public static String formatToVND(double amount) {
+        try {
+            NumberFormat vndFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+            return vndFormat.format(amount);
+        } catch (NumberFormatException e) {
+            return String.valueOf(amount);
+        }
     }
 
 

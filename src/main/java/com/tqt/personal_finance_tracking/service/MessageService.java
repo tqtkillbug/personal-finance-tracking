@@ -107,8 +107,9 @@ public class MessageService {
                     replyMessage.setText("Removed");
                     replyMessage.setReplyToMessageId(replyChatId);
                 }
-            } else if (data.contains("today")){
+            } else if (data.contains("today") || data.contains("yesterday")){
                 handleReport(update);
+                return;
             } else {
                 replyMessage.setText("Not action!");
             }
@@ -181,19 +182,9 @@ public class MessageService {
     private void handleReport(Update update) {
         String data = update.getCallbackQuery().getData();
         SendMessage sendMessage = new SendMessage();
-        if (data.equals("today")){
-
-            DateFilter dateFilter = new DateFilter();
-            dateFilter.setEquals(getFormattedDate("Today"));
-            Filter filter = new Filter("Date", dateFilter);
-            NotionQuery notionQuery = new NotionQuery(filter);
-            NotionQueryResponse response = notionService.queryDatabase(notionQuery);
-            List<Properties> properties = new ArrayList<>();
-            if (response != null){
-                for (Result result : response.getResults()) {
-                   properties.add(result.getProperties());
-                }
-            }
+        if (data.equals("today") || data.equals("yesterday")) {
+            String formattedDate = getFormattedDate(data.equals("today") ? "Today" : "Yesterday");
+            List<Properties> properties = fetchPropertiesByDate(formattedDate);
             sendMessage = BotUtils.buildReportMessage(properties);
         }
 
@@ -202,6 +193,22 @@ public class MessageService {
         sendMessage.setParseMode(ParseMode.MARKDOWNV2);
         botTeleService.sendToClient(sendMessage);
 
+    }
+
+    private List<Properties> fetchPropertiesByDate(String date) {
+        DateFilter dateFilter = new DateFilter();
+        dateFilter.setEquals(date);
+        Filter filter = new Filter("Date", dateFilter);
+        NotionQuery notionQuery = new NotionQuery(filter);
+        NotionQueryResponse response = notionService.queryDatabase(notionQuery);
+
+        List<Properties> properties = new ArrayList<>();
+        if (response != null) {
+            for (Result result : response.getResults()) {
+                properties.add(result.getProperties());
+            }
+        }
+        return properties;
     }
 
 
