@@ -9,6 +9,7 @@ import com.tqt.personal_finance_tracking.model.Notes;
 import com.tqt.personal_finance_tracking.model.NotionPageResponse;
 import com.tqt.personal_finance_tracking.model.gemini.Response;
 import com.tqt.personal_finance_tracking.model.notion.*;
+import com.tqt.personal_finance_tracking.model.notion.Properties;
 import com.tqt.personal_finance_tracking.notation.NotionService;
 import com.tqt.personal_finance_tracking.model.*;
 import com.tqt.personal_finance_tracking.util.BotUtils;
@@ -22,9 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -107,7 +106,7 @@ public class MessageService {
                     replyMessage.setText("Removed");
                     replyMessage.setReplyToMessageId(replyChatId);
                 }
-            } else if (data.contains("today") || data.contains("yesterday")){
+            } else if (data.contains("today") || data.contains("yesterday") || data.contains("thisweek")){
                 handleReport(update);
                 return;
             } else {
@@ -186,6 +185,10 @@ public class MessageService {
             String formattedDate = getFormattedDate(data.equals("today") ? "Today" : "Yesterday");
             List<Properties> properties = fetchPropertiesByDate(formattedDate);
             sendMessage = BotUtils.buildReportMessage(properties);
+        } else if (data.equals("thisweek")) {
+            DateOfWeek dateOfWeek = BotUtils.getMondayAndSundayOfCurrentWeek();
+            List<Properties> properties = fetchPropertiesByRangDate(dateOfWeek.getMonDay(), dateOfWeek.getSunDay());
+            sendMessage = BotUtils.buildReportMessage(properties);
         }
 
         String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
@@ -196,11 +199,20 @@ public class MessageService {
     }
 
     private List<Properties> fetchPropertiesByDate(String date) {
+        DateCondition condition = new DateCondition();
+        condition.setEquals(date);
         DateFilter dateFilter = new DateFilter();
-        dateFilter.setEquals(date);
-        Filter filter = new Filter("Date", dateFilter);
+        dateFilter.setDate(condition);
+        List<DateFilter> listDateFilter = new ArrayList<>();
+        listDateFilter.add(dateFilter);
+        Filter filter = new Filter();
+        filter.setAnd(listDateFilter);
         NotionQuery notionQuery = new NotionQuery(filter);
-        NotionQueryResponse response = notionService.queryDatabase(notionQuery);
+        return getListPropertiesFromNotion(notionQuery);
+    }
+
+    private List<Properties> getListPropertiesFromNotion(NotionQuery query) {
+        NotionQueryResponse response = notionService.queryDatabase(query);
 
         List<Properties> properties = new ArrayList<>();
         if (response != null) {
@@ -209,6 +221,27 @@ public class MessageService {
             }
         }
         return properties;
+    }
+
+    private List<Properties> fetchPropertiesByRangDate(String from, String to) {
+        DateFilter dateFilter = new DateFilter();
+        DateCondition condition = new DateCondition();
+        condition.setOn_or_after(from);
+        dateFilter.setDate(condition);
+
+        DateFilter dateFilter1 = new DateFilter();
+        DateCondition condition1 = new DateCondition();
+        condition1.setOn_or_before(to);
+        dateFilter1.setDate(condition1);
+
+        List<DateFilter> maps = new ArrayList<>();
+        maps.add(dateFilter);
+        maps.add(dateFilter1);
+        Filter filter = new Filter();
+        filter.setAnd(maps);
+
+        NotionQuery notionQuery = new NotionQuery(filter);
+        return getListPropertiesFromNotion(notionQuery);
     }
 
 

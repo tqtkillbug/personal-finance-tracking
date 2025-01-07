@@ -2,12 +2,16 @@ package com.tqt.personal_finance_tracking.util;
 
 
 import com.tqt.personal_finance_tracking.dto.Expense;
+import com.tqt.personal_finance_tracking.model.DateOfWeek;
 import com.tqt.personal_finance_tracking.model.notion.Properties;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.text.NumberFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -156,4 +160,16 @@ public class BotUtils {
         sendMessage.setReplyMarkup(inlineKeyboardMarkup);
         return sendMessage;
     }
+
+    public static DateOfWeek getMondayAndSundayOfCurrentWeek() {
+        LocalDate today = LocalDate.now();
+        LocalDate monday = today.with(DayOfWeek.MONDAY);
+        LocalDate sunday = today.with(DayOfWeek.SUNDAY);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateOfWeek dateOfWeek = new DateOfWeek();
+        dateOfWeek.setMonDay(monday.format(formatter));
+        dateOfWeek.setSunDay(sunday.format(formatter));
+        return dateOfWeek;
+    }
+
 }
