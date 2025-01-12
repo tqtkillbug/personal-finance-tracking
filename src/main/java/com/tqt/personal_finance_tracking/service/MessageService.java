@@ -15,6 +15,7 @@ import com.tqt.personal_finance_tracking.model.*;
 import com.tqt.personal_finance_tracking.util.BotUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -23,6 +24,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
@@ -143,20 +145,21 @@ public class MessageService {
         TextWrapper textWrapperNote = new TextWrapper(
                 new Content(expense.getNote())
         );
-        IdWrapper idWrapper = new IdWrapper("15c0d9d80cda81adaaa7cb34b5d9a94d");
         properties.setSource(new Source(List.of(textWrapper)));
         properties.setAmount(new Amount(Double.parseDouble(expense.getAmount())));
+        properties.setDate(new Date(new DateContent(getFormattedDate(expense.getDateType(), "yyyy-MM-dd"))));
+        String month = getFormattedDate(expense.getDateType(), "MM");
+        String relationId = Contants.MAP_RELATION_MONTH.get(month);
+        IdWrapper idWrapper = new IdWrapper(relationId);
         properties.setMonth(new Month(List.of(idWrapper)));
-        properties.setDate(new Date(new DateContent(getFormattedDate(expense.getDateType()))));
         properties.setNotes(new Notes(List.of(textWrapperNote)));
         properties.setType(new Type(new NameWrapper(expense.getType())));
-
         String databaseId = expense.getFundType().equals("Income") ? Contants.DATABASE_INCOME_ID : Contants.DATABASE_EXPESENS_ID;
         return notionService.insertPage(properties, databaseId);
     }
 
-    public static String getFormattedDate(String input) {
-        SimpleDateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    public static String getFormattedDate(String input, String format) {
+        SimpleDateFormat isoDateFormat = new SimpleDateFormat(format);
         Calendar calendar = Calendar.getInstance();
 
         String result;
@@ -182,7 +185,7 @@ public class MessageService {
         String data = update.getCallbackQuery().getData();
         SendMessage sendMessage = new SendMessage();
         if (data.equals("today") || data.equals("yesterday")) {
-            String formattedDate = getFormattedDate(data.equals("today") ? "Today" : "Yesterday");
+            String formattedDate = getFormattedDate(data.equals("today") ? "Today" : "Yesterday", "yyyy-MM-dd");
             List<Properties> properties = fetchPropertiesByDate(formattedDate);
             sendMessage = BotUtils.buildReportMessage(properties);
         } else if (data.equals("thisweek")) {

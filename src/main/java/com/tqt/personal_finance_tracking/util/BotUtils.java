@@ -25,11 +25,13 @@ public class BotUtils {
         b1.setText("Delete");
         b1.setCallbackData("delete:" + pageId);
         row1.add(b1);
-//        InlineKeyboardButton b2 = new InlineKeyboardButton();
-//        b2.setText("Change");
-//        b2.setCallbackData("change:" + pageId);
-//        row1.add(b2);
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton b2 = new InlineKeyboardButton();
+        b2.setText("Today Report");
+        b2.setCallbackData("today");
+        row2.add(b2);
         keyboard.add(row1);
+        keyboard.add(row2);
         return keyboard;
     }
 
