@@ -95,7 +95,12 @@
             <artifactId>httpclient-cache</artifactId>
             <version>4.5.13</version>
         </dependency>
-
+        <!-- https://mvnrepository.cm/artifact/com.assemblyai/assemblyai-java -->
+        <dependency>
+            <groupId>com.assemblyai</groupId>
+            <artifactId>assemblyai-java</artifactId>
+            <version>4.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>

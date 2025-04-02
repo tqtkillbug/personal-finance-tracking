@@ -39,7 +39,7 @@ public class BotUtils {
     public static String buildExpenseMessage(Expense expense) {
         StringBuilder messageBuilder = new StringBuilder();
 
-        messageBuilder.append("📋 *Confirmed ").append(expense.getFundType()).append("💰*\n\n");
+        messageBuilder.append("📋 *").append(expense.getFundType()).append("💰*\n\n");
 
         messageBuilder.append("💡 *Title:* ").append(escapeMarkdown(expense.getTitle())).append("\n\n");
         messageBuilder.append("🛍️ *Type:* ").append(escapeMarkdown(expense.getType())).append("\n\n");

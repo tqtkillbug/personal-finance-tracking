@@ -1,6 +1,9 @@
 package com.tqt.personal_finance_tracking.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.tqt.personal_finance_tracking.config.AppConfig;
 import com.tqt.personal_finance_tracking.contants.Contants;
 import com.tqt.personal_finance_tracking.dto.Expense;
 import com.tqt.personal_finance_tracking.model.Amount;
@@ -15,8 +18,8 @@ import com.tqt.personal_finance_tracking.model.*;
 import com.tqt.personal_finance_tracking.util.BotUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -24,15 +27,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
 @Service
 public class MessageService {
-
-    @Autowired
-    private XAIService xaiService;
 
     @Autowired
     private BotTeleService botTeleService;
@@ -43,8 +42,22 @@ public class MessageService {
     @Autowired
     private GeminiAPIClient geminiApiService;
 
+    @Autowired
+    private AssemblyAIService assemblyAIService;
 
-    public void handleMessage(Update update) {
+    @Autowired
+    private AppConfig appConfig;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+
+    public void handleMessage(Update update) throws InterruptedException {
+        if (update.hasMessage() && (update.getMessage().hasAudio() || update.getMessage().hasVoice())) {
+         handleVoiceMessage(update);
+        return;
+        }
         if (update.hasCallbackQuery()){
             handleCallBack(update);
             return;
@@ -56,6 +69,10 @@ public class MessageService {
         Message message = update.getMessage();
         String text = message.getText();
         String chatId = String.valueOf(message.getChatId());
+        handleTextInput(text, chatId);
+    }
+
+    private void handleTextInput(String text, String chatId){
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setParseMode(ParseMode.MARKDOWNV2);
@@ -77,6 +94,33 @@ public class MessageService {
                 sendMessage.setText("*Không xác định chi tiêu, hãy nhập lại*");
             }
             botTeleService.sendToClient(sendMessage);
+        }
+    }
+
+
+    private void handleVoiceMessage(Update update) throws InterruptedException {
+        if (update.hasMessage() && (update.getMessage().hasAudio() || update.getMessage().hasVoice())) {
+            String fileId = "";
+            if (update.getMessage().hasVoice()) {
+                fileId = update.getMessage().getVoice().getFileId();
+            } else if (update.getMessage().hasAudio()) {
+                fileId = update.getMessage().getAudio().getFileId();
+            }
+            String filePath = getFilePath(fileId);
+            if (filePath == null) {
+                log.error("Không lấy được file_path cho fileId: {}", fileId);
+                return;
+            }
+            String telegramFileUrl = "https://api.telegram.org/file/bot" + appConfig.getToken() + "/" + filePath;
+            log.info("URL file audio: {}", telegramFileUrl);
+            String transcriptText = assemblyAIService.transcribe(telegramFileUrl);
+
+            String responseText;
+            responseText = Objects.requireNonNullElse(transcriptText, "Có lỗi xảy ra khi xử lý audio.");
+
+            Message message = update.getMessage();
+            String chatId = String.valueOf(message.getChatId());
+            handleTextInput(responseText, chatId);
         }
     }
 
@@ -245,6 +289,29 @@ public class MessageService {
 
         NotionQuery notionQuery = new NotionQuery(filter);
         return getListPropertiesFromNotion(notionQuery);
+    }
+
+    /**
+     * Gọi API getFile của Telegram để lấy file_path dựa trên fileId.
+     *
+     * @param fileId ID của file được gửi từ Telegram.
+     * @return file_path nếu thành công, ngược lại trả về null.
+     */
+    public String getFilePath(String fileId) {
+        String url = "https://api.telegram.org/bot" + appConfig.getToken() + "/getFile?file_id=" + fileId;
+        try {
+            String response = restTemplate.getForObject(url, String.class);
+            JsonNode root = objectMapper.readTree(response);
+            if (root.path("ok").asBoolean(false)) {
+                JsonNode fileNode = root.path("result");
+                if (fileNode.has("file_path")) {
+                    return fileNode.get("file_path").asText();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy file_path từ Telegram cho fileId: {}", fileId, e);
+        }
+        return null;
     }
 
 
