@@ -76,6 +76,7 @@ public class MessageService {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setParseMode(ParseMode.MARKDOWNV2);
+        botTeleService.sendActionTyping(chatId);
         if (!text.isEmpty()){
             String promptBuilt = String.format(Contants.PROMPT_EXTRACT_TEXT, text);
             try {
